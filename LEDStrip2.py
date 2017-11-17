@@ -19,7 +19,12 @@ class LEDStrip:
         for i in range(size):
             self.strip.append(empty)
 
+    def getSize(self):
+        return self.size
+
     def setColor(self, led, color):
+        if color is None or color is 0:
+            color = {"r": 0, "g": 0, "b": 0}
         self.strip[led] = color
 
     def getColor(self, led):
@@ -35,3 +40,18 @@ class LEDStrip:
             spidev.write(rgb)
 
         spidev.flush()
+
+
+def main():
+    import xmlrpc.server
+    strip = LEDStrip(64)
+    xrs = xmlrpc.server.SimpleXMLRPCServer(('', 47011), allow_none=True)
+    xrs.register_instance(strip)
+    xrs.register_multicall_functions()
+    xrs.register_introspection_functions()
+    xrs.serve_forever()
+
+
+if __name__ == "__main__":
+    main()
+
