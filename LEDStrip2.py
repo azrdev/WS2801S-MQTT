@@ -3,8 +3,11 @@ import math
 import array
 import fcntl
 
-spidev = open("/dev/spidev0.0", "wb")
-fcntl.ioctl(spidev, 0x40046b04, array.array('L', [400000]))
+spidev = open("/dev/spidev1.0", "wb")
+# set SPI frequency
+fcntl.ioctl(spidev,
+        0x40046b04, # SPI_IOC_WR_MAX_SPEED_HZ
+        array.array('L', [400000])) # 400 kHz
 
 class LEDStrip:
     def __init__(self, size):
