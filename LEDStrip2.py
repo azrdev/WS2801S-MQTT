@@ -10,7 +10,7 @@ fcntl.ioctl(spidev,
         array.array('L', [400000])) # 400 kHz
 
 class LEDStrip:
-    def __init__(self, size):
+    def __init__(self, size, sync=True):
         self.size = size
         self.strip = []
         empty = {"r": 0,
@@ -18,6 +18,8 @@ class LEDStrip:
                  "b": 0}
         for i in range(size):
             self.strip.append(empty)
+        if sync:
+            self.update()
 
     def getSize(self):
         return self.size
