@@ -1,12 +1,12 @@
 import paho.mqtt.client
-from LEDStrip2 import LEDStrip
+from LEDStrip2 import LEDStrip, MAX
 import logging
 import json
 
 
 logger = logging.getLogger(__name__)
 ZERO = {'r': 0, 'g': 0, 'b': 0}
-ON = {'r': 255, 'g': 255, 'b': 255}
+ON = {'r': MAX, 'g': MAX, 'b': MAX}
 MQTT_BROKER = 'localhost'
 
 
@@ -73,9 +73,9 @@ class MqttLedServer(paho.mqtt.client.Client):
         self.strip.update()
 
     def transform(self, color):
-        #return color
-        #return math.log(1 + color)
-        return int( color **3 / 255 **2 )
+        return color
+        #return math.log1p(color)
+        #return int( color **3 / MAX **2 )
 
     def publishBrightness(self):
         color = self.strip.getColor(0)

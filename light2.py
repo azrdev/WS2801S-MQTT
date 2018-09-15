@@ -1,9 +1,8 @@
 #! /usr/bin/env python3
-from LEDStrip2 import LEDStrip
+from LEDStrip2 import LEDStrip, MAX
 import random
 import time
 LENGTH = 64
-MAX = 120
 
 strip = LEDStrip(LENGTH)
 
@@ -21,5 +20,5 @@ while True:
     strip.setColor(i,color)
 
     print("Set LED {} to {},{},{}".format(i,r,g,b))
-  time.sleep(0.01)
+  time.sleep(0.1)
   strip.update()
