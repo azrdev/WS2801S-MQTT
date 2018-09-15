@@ -7,9 +7,9 @@ MAX = 0xff
 
 class LEDStrip:
     def __init__(self, size, sync=True):
-        spidev = open("/dev/spidev1.0", "wb")
+        self.spidev = open("/dev/spidev1.0", "wb")
         # set SPI frequency
-        fcntl.ioctl(spidev,
+        fcntl.ioctl(self.spidev,
                 0x40046b04, # SPI_IOC_WR_MAX_SPEED_HZ
                 array.array('L', [400000])) # 400 kHz
 
@@ -41,9 +41,9 @@ class LEDStrip:
             rgb[0] = foo["g"]
             rgb[1] = foo["r"]
             rgb[2] = foo["b"]
-            spidev.write(rgb)
+            self.spidev.write(rgb)
 
-        spidev.flush()
+        self.spidev.flush()
 
 
 def main():
