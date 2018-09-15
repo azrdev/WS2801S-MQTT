@@ -13,7 +13,7 @@ class MqttLedServer(paho.mqtt.client.Client):
     def __init__(self,
                  strip_size = 64,
                  realm = 'light/ledstrip/',
-                 broker = 'tolimon'):
+                 broker = 'localhost'):
         super().__init__()
         self.strip = LEDStrip(strip_size)
         #self.enable_logger(logger)
@@ -40,31 +40,36 @@ class MqttLedServer(paho.mqtt.client.Client):
                 }),
                 retain=True)
         self.subscribe(self.command_topic)
+        self.subscribe(self.state_topic)  # initial fetch
 
     def on_message(self, connection, userdata, msg):
         # msg: a class with members topic, payload, qos, retain
         try:
             logger.debug("%s\t%s", msg.topic, msg.payload)
-            if msg.topic == self.command_topic:
+            if msg.topic == self.state_topic:
+                self.unsubscribe(self.state_topic)
+            if msg.topic in (self.command_topic, self.state_topic):
                 command = json.loads(msg.payload.decode('utf8'))
-                if "color" in command:
-                    self.setColor(**command["color"])
-                elif "state" in command:
-                    if command["state"] == "ON":
-                        self.setColor(**ON)
-                    else:
-                        self.setColor(**ZERO)
-            elif msg.topic == self.state_topic:
-                command = json.loads(msg.payload.decode('utf8'))
-                if "state" in command:
-                    if command["state"] == "ON":
-                        self.setColor(**ON)
-                    else:
-                        self.setColor(**ZERO)
+                self.process_command(command)
             else:
                 logger.info("got message for topic %s we don't know: %s", msg.topic, msg.payload)
         except BaseException as e:
             logger.info("handling message threw %r", e)
+
+    def process_command(self, command):
+        # TODO: transform() as hass-effect
+        state = command.get('state')
+        color = command.get('color')
+        if state:
+            if state == "ON":
+                if color:
+                    self.setColor(color)
+                else:
+                    self.setColor(**ON)
+            else:
+                self.setColor(**ZERO)
+        elif color:
+            self.setColor(color)
 
     def setColor(self, r=0, g=0, b=0):
         logger.debug("Setting all LEDs to color %d,%d,%d", r,g,b)
