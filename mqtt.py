@@ -7,21 +7,22 @@ import json
 logger = logging.getLogger(__name__)
 ZERO = {'r': 0, 'g': 0, 'b': 0}
 ON = {'r': MAX, 'g': MAX, 'b': MAX}
-MQTT_BROKER = 'localhost'
 
 
 class MqttLedServer(paho.mqtt.client.Client):
-    def __init__(self):
+    def __init__(self,
+                 strip_size = 64,
+                 realm = 'light/ledstrip/',
+                 broker = 'tolimon'):
         super().__init__()
-        self.strip = LEDStrip(64)
+        self.strip = LEDStrip(strip_size)
         #self.enable_logger(logger)
 
-        self.realm = 'light/ledstrip/'
-        self.discovery_prefix = 'homeassistant/' + self.realm
-        self.command_topic = self.realm + "switch"
-        self.state_topic = self.realm + "status"
+        self.discovery_prefix = 'homeassistant/' + realm
+        self.command_topic = realm + "switch"
+        self.state_topic = realm + "status"
 
-        self.connect_async(MQTT_BROKER)
+        self.connect_async(broker)
 
     def run(self):
         self.loop_forever()
@@ -68,7 +69,8 @@ class MqttLedServer(paho.mqtt.client.Client):
     def setColor(self, r=0, g=0, b=0):
         logger.debug("Setting all LEDs to color %d,%d,%d", r,g,b)
         for i in range(self.strip.size):
-            self.strip.setColor(i, {'r': self.transform(r), 'g': self.transform(g), 'b': self.transform(b)})
+            self.strip.setColor(i, {k: self.transform(v)
+                                    for k, v in {'r': r, 'g': g, 'b': b}.items()})
         self.publishBrightness()
         self.strip.update()
 
@@ -80,16 +82,13 @@ class MqttLedServer(paho.mqtt.client.Client):
     def publishBrightness(self):
         color = self.strip.getColor(0)
         is_on = any((c > 0 for c in color.values()))
-        self.publish(self.state_topic, json.dumps({
-                "state": "ON" if is_on else "OFF",
-                "color": color,
-            }), retain=True)
+        msg = {"state": "ON", "color": color} if is_on else {"state": "OFF"}
+        self.publish(self.state_topic, json.dumps(msg), retain=True)
 
 
 if __name__ == "__main__":
     import logging.handlers
     logger.setLevel(logging.DEBUG)
     logger.addHandler(logging.StreamHandler())
-    mls = MqttLedServer()
-    mls.run()
+    MqttLedServer().run()
 
