@@ -63,13 +63,13 @@ class MqttLedServer(paho.mqtt.client.Client):
         if state:
             if state == "ON":
                 if color:
-                    self.setColor(color)
+                    self.setColor(**color)
                 else:
                     self.setColor(**ON)
             else:
                 self.setColor(**ZERO)
         elif color:
-            self.setColor(color)
+            self.setColor(**color)
 
     def setColor(self, r=0, g=0, b=0):
         logger.debug("Setting all LEDs to color %d,%d,%d", r,g,b)
